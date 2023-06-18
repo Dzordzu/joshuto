@@ -149,6 +149,9 @@ pub enum Command {
     Zoxide(String),
     ZoxideInteractive,
 
+    CustomSearch(Vec<String>),
+    CustomSearchInteractive(Vec<String>),
+
     BookmarkAdd,
     BookmarkChangeDirectory,
 }

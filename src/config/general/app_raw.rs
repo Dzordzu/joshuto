@@ -16,6 +16,12 @@ const fn default_scroll_offset() -> usize {
     6
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct CustomCommand {
+    pub name: String,
+    pub command: String,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfigRaw {
     #[serde(default = "default_scroll_offset")]
@@ -34,6 +40,8 @@ pub struct AppConfigRaw {
     pub preview_options: PreviewOptionRaw,
     #[serde(default, rename = "tab")]
     pub tab_options: TabOptionRaw,
+    #[serde(default, rename = "custom_commands")]
+    pub custom_commands: Vec<CustomCommand>,
 }
 
 impl From<AppConfigRaw> for AppConfig {
@@ -46,6 +54,7 @@ impl From<AppConfigRaw> for AppConfig {
             _display_options: DisplayOption::from(raw.display_options),
             _preview_options: PreviewOption::from(raw.preview_options),
             _tab_options: TabOption::from(raw.tab_options),
+            custom_commands: raw.custom_commands,
         }
     }
 }

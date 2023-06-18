@@ -10,6 +10,7 @@ pub struct AppConfig {
     pub xdg_open: bool,
     pub xdg_open_fork: bool,
     pub watch_files: bool,
+    pub custom_commands: Vec<super::app_raw::CustomCommand>,
     pub _display_options: DisplayOption,
     pub _preview_options: PreviewOption,
     pub _tab_options: TabOption,
