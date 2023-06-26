@@ -17,7 +17,7 @@ pub fn custom_search(
         .config_ref()
         .custom_commands
         .as_slice()
-        .into_iter()
+        .iter()
         .find(|x| x.name == words[0])
         .ok_or(JoshutoError::new(
             JoshutoErrorKind::InvalidParameters,
@@ -36,7 +36,7 @@ pub fn custom_search(
             .skip(1)
             .cloned()
             .collect::<Vec<String>>()
-            .join(" ".into()),
+            .join(" "),
     );
     let mut command_with_args: Vec<String> = split(&text).map_err(|_| {
         JoshutoError::new(
