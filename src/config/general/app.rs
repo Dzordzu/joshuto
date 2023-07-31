@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::app_raw::AppConfigRaw;
 use super::DEFAULT_CONFIG_FILE_PATH;
 
@@ -11,6 +13,7 @@ pub struct AppConfig {
     pub xdg_open_fork: bool,
     pub watch_files: bool,
     pub custom_commands: Vec<super::app_raw::CustomCommand>,
+    pub cmd_aliases: HashMap<String, String>,
     pub _display_options: DisplayOption,
     pub _preview_options: PreviewOption,
     pub _tab_options: TabOption,
