@@ -9,7 +9,7 @@ use crate::config::clean::app::display::new_tab::NewTabMode;
 use crate::config::clean::app::display::sort_type::SortType;
 use crate::config::clean::app::search::CaseSensitivity;
 use crate::config::clean::app::tab::TabBarDisplayMode;
-use crate::error::{JoshutoError, JoshutoErrorKind};
+use crate::error::{AppError, AppErrorKind};
 use crate::io::FileOperationOptions;
 use crate::util::unix;
 
@@ -27,7 +27,7 @@ macro_rules! simple_command_conversion_case {
 }
 
 impl std::str::FromStr for Command {
-    type Err = JoshutoError;
+    type Err = AppError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some(stripped) = s.strip_prefix(':') {
@@ -130,8 +130,8 @@ impl std::str::FromStr for Command {
             match arg {
                 "" => match HOME_DIR.as_ref() {
                     Some(s) => Ok(Self::ChangeDirectory { path: s.clone() }),
-                    None => Err(JoshutoError::new(
-                        JoshutoErrorKind::EnvVarNotPresent,
+                    None => Err(AppError::new(
+                        AppErrorKind::EnvVarNotPresent,
                         format!("{}: Cannot find home directory", command),
                     )),
                 },
@@ -147,10 +147,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::CursorMoveDown { offset: 1 }),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::CursorMoveDown { offset: s }),
-                    Err(e) => Err(JoshutoError::new(
-                        JoshutoErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(AppError::new(AppErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_CURSOR_MOVE_PAGEUP {
@@ -164,10 +161,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::CursorMoveUp { offset: 1 }),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::CursorMoveUp { offset: s }),
-                    Err(e) => Err(JoshutoError::new(
-                        JoshutoErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(AppError::new(AppErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_PARENT_CURSOR_MOVE_DOWN {
@@ -175,10 +169,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::ParentCursorMoveDown { offset: 1 }),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::ParentCursorMoveDown { offset: s }),
-                    Err(e) => Err(JoshutoError::new(
-                        JoshutoErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(AppError::new(AppErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_PARENT_CURSOR_MOVE_UP {
@@ -186,10 +177,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::ParentCursorMoveUp { offset: 1 }),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::ParentCursorMoveUp { offset: s }),
-                    Err(e) => Err(JoshutoError::new(
-                        JoshutoErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(AppError::new(AppErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_PREVIEW_CURSOR_MOVE_DOWN {
@@ -197,10 +185,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::PreviewCursorMoveDown { offset: 1 }),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::PreviewCursorMoveDown { offset: s }),
-                    Err(e) => Err(JoshutoError::new(
-                        JoshutoErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(AppError::new(AppErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_PREVIEW_CURSOR_MOVE_UP {
@@ -208,16 +193,13 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::PreviewCursorMoveUp { offset: 1 }),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::PreviewCursorMoveUp { offset: s }),
-                    Err(e) => Err(JoshutoError::new(
-                        JoshutoErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(AppError::new(AppErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_NEW_DIRECTORY {
             if arg.is_empty() {
-                Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: no directory name given", command),
                 ))
             } else {
@@ -229,10 +211,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::OpenFileWith { index: None }),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::OpenFileWith { index: Some(s) }),
-                    Err(e) => Err(JoshutoError::new(
-                        JoshutoErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(AppError::new(AppErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_SYMLINK_FILES {
@@ -242,8 +221,8 @@ impl std::str::FromStr for Command {
                     "--relative=true" => relative = true,
                     "--relative=false" => relative = false,
                     _ => {
-                        return Err(JoshutoError::new(
-                            JoshutoErrorKind::UnrecognizedArgument,
+                        return Err(AppError::new(
+                            AppErrorKind::UnrecognizedArgument,
                             format!("{}: unknown option '{}'", command, arg),
                         ));
                     }
@@ -257,8 +236,8 @@ impl std::str::FromStr for Command {
                     "--all-selected=true" => all_selected = true,
                     "" => all_selected = false,
                     _ => {
-                        return Err(JoshutoError::new(
-                            JoshutoErrorKind::UnrecognizedArgument,
+                        return Err(AppError::new(
+                            AppErrorKind::UnrecognizedArgument,
                             format!("{}: unknown option '{}'", command, arg),
                         ));
                     }
@@ -274,8 +253,8 @@ impl std::str::FromStr for Command {
                     "--overwrite=false" => options.overwrite = false,
                     "--skip_exist=false" => options.skip_exist = false,
                     _ => {
-                        return Err(JoshutoError::new(
-                            JoshutoErrorKind::UnrecognizedArgument,
+                        return Err(AppError::new(
+                            AppErrorKind::UnrecognizedArgument,
                             format!("{}: unknown option '{}'", command, arg),
                         ));
                     }
@@ -291,8 +270,8 @@ impl std::str::FromStr for Command {
                     "--permanently" => permanently = true,
                     "--noconfirm" => noconfirm = true,
                     _ => {
-                        return Err(JoshutoError::new(
-                            JoshutoErrorKind::UnrecognizedArgument,
+                        return Err(AppError::new(
+                            AppErrorKind::UnrecognizedArgument,
                             format!("{}: unknown option '{}'", command, arg),
                         ))
                     }
@@ -305,8 +284,8 @@ impl std::str::FromStr for Command {
             })
         } else if command == CMD_RENAME_FILE {
             match arg {
-                "" => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                "" => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: Expected 1, got 0", command),
                 )),
                 arg => {
@@ -316,8 +295,8 @@ impl std::str::FromStr for Command {
             }
         } else if command == CMD_SEARCH_STRING {
             match arg {
-                "" => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                "" => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: Expected 1, got 0", command),
                 )),
                 arg => Ok(Self::SearchString {
@@ -330,8 +309,8 @@ impl std::str::FromStr for Command {
             })
         } else if command == CMD_SEARCH_GLOB {
             match arg {
-                "" => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                "" => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: Expected 1, got 0", command),
                 )),
                 arg => Ok(Self::SearchGlob {
@@ -340,8 +319,8 @@ impl std::str::FromStr for Command {
             }
         } else if command == CMD_SEARCH_REGEX {
             match arg {
-                "" => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                "" => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: Expected 1, got 0", command),
                 )),
                 arg => Ok(Self::SearchRegex {
@@ -369,8 +348,8 @@ impl std::str::FromStr for Command {
                         options,
                     })
                 }
-                Err(e) => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Err(e) => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: {}", arg, e),
                 )),
             }
@@ -395,14 +374,14 @@ impl std::str::FromStr for Command {
                             case_sensitivity,
                             set_type,
                         }),
-                        Err(e) => Err(JoshutoError::new(
-                            JoshutoErrorKind::InvalidParameters,
+                        Err(e) => Err(AppError::new(
+                            AppErrorKind::InvalidParameters,
                             format!("{}: {}", arg, e),
                         )),
                     }
                 }
-                Err(e) => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Err(e) => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: {}", arg, e),
                 )),
             }
@@ -412,12 +391,12 @@ impl std::str::FromStr for Command {
                     words: s,
                     spawn: command == "spawn",
                 }),
-                Ok(_) => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Ok(_) => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: No commands given", command),
                 )),
-                Err(e) => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Err(e) => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: {}", arg, e),
                 )),
             }
@@ -426,8 +405,8 @@ impl std::str::FromStr for Command {
                 "reverse" => Ok(Self::SortReverse),
                 arg => match SortType::from_str(arg) {
                     Some(s) => Ok(Self::Sort(s)),
-                    None => Err(JoshutoError::new(
-                        JoshutoErrorKind::InvalidParameters,
+                    None => Err(AppError::new(
+                        AppErrorKind::InvalidParameters,
                         format!("{}: Unknown option '{}'", command, arg),
                     )),
                 },
@@ -441,16 +420,16 @@ impl std::str::FromStr for Command {
         } else if command == CMD_TAB_SWITCH {
             match arg.parse::<i32>() {
                 Ok(s) => Ok(Self::TabSwitch { offset: s }),
-                Err(e) => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Err(e) => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: {}", command, e),
                 )),
             }
         } else if command == CMD_TAB_SWITCH_INDEX {
             match arg.parse::<usize>() {
                 Ok(s) => Ok(Self::TabSwitchIndex { index: s }),
-                Err(e) => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Err(e) => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: {}", command, e),
                 )),
             }
@@ -468,8 +447,8 @@ impl std::str::FromStr for Command {
         } else if command == CMD_FLAT {
             match arg.parse::<usize>() {
                 Ok(i) => Ok(Self::Flat { depth: i }),
-                Err(e) => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                Err(e) => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: {}", command, e),
                 )),
             }
@@ -477,8 +456,8 @@ impl std::str::FromStr for Command {
             let c = arg.chars().next();
             match c {
                 Some(c) => Ok(Self::NumberedCommand { initial: c }),
-                None => Err(JoshutoError::new(
-                    JoshutoErrorKind::InvalidParameters,
+                None => Err(AppError::new(
+                    AppErrorKind::InvalidParameters,
                     format!("{}: no starting character given", command),
                 )),
             }
@@ -487,8 +466,8 @@ impl std::str::FromStr for Command {
                 pattern: arg.to_string(),
             })
         } else {
-            Err(JoshutoError::new(
-                JoshutoErrorKind::UnrecognizedCommand,
+            Err(AppError::new(
+                AppErrorKind::UnrecognizedCommand,
                 format!("Unrecognized command '{}'", command),
             ))
         }
