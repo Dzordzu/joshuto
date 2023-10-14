@@ -2,7 +2,7 @@ use super::change_directory::change_directory;
 use super::sub_process::current_filenames;
 use crate::commands::cursor_move;
 use crate::context::AppContext;
-use crate::error::{JoshutoError, JoshutoErrorKind, JoshutoResult};
+use crate::error::{AppError, AppErrorKind, AppResult};
 use crate::ui::AppBackend;
 use shell_words::split;
 use std::process::{Command, Stdio};
@@ -12,15 +12,15 @@ pub fn custom_search(
     backend: &mut AppBackend,
     words: &[String],
     interactive: bool,
-) -> JoshutoResult {
+) -> AppResult {
     let custom_command = context
         .config_ref()
         .custom_commands
         .as_slice()
         .iter()
         .find(|x| x.name == words[0])
-        .ok_or(JoshutoError::new(
-            JoshutoErrorKind::InvalidParameters,
+        .ok_or(AppError::new(
+            AppErrorKind::InvalidParameters,
             "No custom command with given name".into(),
         ))?
         .command
@@ -39,8 +39,8 @@ pub fn custom_search(
             .join(" "),
     );
     let mut command_with_args: Vec<String> = split(&text).map_err(|_| {
-        JoshutoError::new(
-            JoshutoErrorKind::InvalidParameters,
+        AppError::new(
+            AppErrorKind::InvalidParameters,
             "Command cannot be splitted".into(),
         )
     })?;
@@ -66,8 +66,8 @@ pub fn custom_search(
     if cmd_result.status.success() {
         let returned_text = std::str::from_utf8(&cmd_result.stdout)
             .map_err(|_| {
-                JoshutoError::new(
-                    JoshutoErrorKind::ParseError,
+                AppError::new(
+                    AppErrorKind::ParseError,
                     "Could not get command result as utf8".into(),
                 )
             })?
@@ -76,8 +76,8 @@ pub fn custom_search(
         let path = std::path::Path::new(returned_text);
         change_directory(
             context,
-            path.parent().ok_or(JoshutoError::new(
-                JoshutoErrorKind::ParseError,
+            path.parent().ok_or(AppError::new(
+                AppErrorKind::ParseError,
                 "Could not get parent directory".into(),
             ))?,
         )?;
@@ -96,14 +96,14 @@ pub fn custom_search(
         Ok(())
     } else {
         let returned_text = std::str::from_utf8(&cmd_result.stderr).map_err(|_| {
-            JoshutoError::new(
-                JoshutoErrorKind::ParseError,
+            AppError::new(
+                AppErrorKind::ParseError,
                 "Could not get command result as utf8".into(),
             )
         })?;
 
-        Err(JoshutoError::new(
-            JoshutoErrorKind::ParseError,
+        Err(AppError::new(
+            AppErrorKind::ParseError,
             format!("Command failed: {}", returned_text),
         ))
     }
